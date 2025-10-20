@@ -1,11 +1,11 @@
 # =====================================================
-# 🧠 LuvEA Backend (Final Direct-Link Version 2025)
+# 🧠 LuvEA Backend (Final Linked Version)
 # =====================================================
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 import os, requests, shutil
 
-app = FastAPI(title="LuvEA Backend - Direct Runner Link")
+app = FastAPI(title="LuvEA Backend - Linked to Gitpod Runner")
 
 # --- CONFIGURATION ---
 RUNNER_URL = "https://3000--019a0278-f0c0-7b4a-a077-b50c65ea7c58.eu-central-1-01.gitpod.dev"
@@ -65,7 +65,6 @@ async def upload_ea(file: UploadFile = File(...)):
 @app.post("/start")
 def start_ea():
     try:
-        # Directly call runner /start
         response = requests.post(f"{RUNNER_URL}/start", timeout=10)
         return {
             "status": "started ✅",
