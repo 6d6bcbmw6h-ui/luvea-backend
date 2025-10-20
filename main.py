@@ -90,3 +90,15 @@ async def upload_ea(file: UploadFile = File(...)):
     except Exception as e:
         return {"error": str(e)}
 
+
+
+@app.post("/api/login")
+async def login(data: dict):
+    server = data.get("server")
+    account = data.get("account")
+    password = data.get("password")
+
+    # qui puoi collegare al runner o solo loggare per test
+    print(f"MT4 login attempt → Server: {server}, Account: {account}")
+    
+    return {"status": "ok", "server": server, "account": account}
