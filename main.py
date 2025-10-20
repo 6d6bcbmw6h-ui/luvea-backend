@@ -2,18 +2,37 @@ from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 import os, requests, shutil
 
-app = FastAPI(title="LuvEA Backend Minimal")
+app = FastAPI(title="LuvEA Backend Auto-Link")
 
-# --- SETTINGS ---
-# ✅ Runner attivo su Gitpod (porta 3000)
-RUNNER_URL = "https://3000-019a0278-f0c0-7b4a-a077-b50c65ea7c58.eu-central-1-01.gitpod.dev"
+# ===============================
+# 🔗 AUTO-DETECT GITPOD RUNNER URL
+# ===============================
+def get_runner_url():
+    """
+    Rileva automaticamente l'URL pubblico Gitpod (anche se cambia ID o porta).
+    Se non trovato, usa fallback manuale.
+    """
+    try:
+        port = os.getenv("PORT", "3000")
+        workspace = os.getenv("GITPOD_WORKSPACE_URL", "")
+        if workspace:
+            base = workspace.replace("https://", f"https://{port}-")
+            return base
+        else:
+            return "https://3000-019a0278-f0c0-7b4a-a077-b50c65ea7c58.eu-central-1-01.gitpod.dev"
+    except Exception:
+        return "https://3000-019a0278-f0c0-7b4a-a077-b50c65ea7c58.eu-central-1-01.gitpod.dev"
+
+
+RUNNER_URL = get_runner_url()
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 # --- LOGIN PAGE ---
 @app.get("/", response_class=HTMLResponse)
 def index():
-    return """
+    return f"""
     <h2>🧠 LuvEA Cloud Login</h2>
     <form action="/login" method="post">
         <input name="server" placeholder="MT4 Server"><br>
@@ -21,7 +40,9 @@ def index():
         <input name="password" placeholder="Password" type="password"><br>
         <button type="submit">Access</button>
     </form>
+    <p><small>Runner URL: <b>{RUNNER_URL}</b></small></p>
     """
+
 
 # --- LOGIN HANDLER ---
 @app.post("/login")
@@ -40,6 +61,7 @@ def login(server: str = Form(...), login: str = Form(...), password: str = Form(
     """
     return HTMLResponse(html)
 
+
 # --- UPLOAD EA (local) ---
 @app.post("/upload-ea/", response_class=HTMLResponse)
 async def upload_ea(file: UploadFile = File(...)):
@@ -47,6 +69,7 @@ async def upload_ea(file: UploadFile = File(...)):
     with open(path, "wb") as f:
         f.write(await file.read())
     return f"<p>✅ Uploaded: {file.filename}</p><a href='/'>⬅️ Back</a>"
+
 
 # --- START EA ---
 @app.post("/start")
@@ -60,6 +83,7 @@ def start_ea():
         return HTMLResponse(f"<p>▶️ {data}</p><a href='/'>⬅️ Back</a>")
     except Exception as e:
         return HTMLResponse(f"<p>❌ Error contacting runner: {e}</p><a href='/'>⬅️ Back</a>")
+
 
 # --- STOP EA ---
 @app.post("/stop")
@@ -75,7 +99,7 @@ def stop_ea():
         return HTMLResponse(f"<p>❌ Error contacting runner: {e}</p><a href='/'>⬅️ Back</a>")
 
 
-# ========== LuvEA Runner Uploader ==========
+# --- UPLOAD EA DIRECT TO RUNNER ---
 @app.post("/api/upload-ea")
 async def upload_ea_api(file: UploadFile = File(...)):
     try:
@@ -86,7 +110,7 @@ async def upload_ea_api(file: UploadFile = File(...)):
         return {"error": str(e)}
 
 
-# --- Connect MT4 directly from backend ---
+# --- CONNECT MT4 (bridge) ---
 @app.post("/api/connect-mt4")
 async def api_connect(data: dict):
     try:
