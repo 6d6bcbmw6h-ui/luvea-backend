@@ -102,3 +102,30 @@ async def login(data: dict):
     print(f"MT4 login attempt → Server: {server}, Account: {account}")
     
     return {"status": "ok", "server": server, "account": account}
+
+
+@app.post("/api/connect-mt4")
+async def api_connect(data: dict):
+    import requests
+    r = requests.post(
+        "https://5000-019a0278-f0c0-7b4a-a077-b50c65ea7c58.eu-central-1-01.gitpod.dev/connect-mt4",
+        json=data
+    )
+    return r.json()
+
+from fastapi import File, UploadFile
+import shutil, os
+
+EA_DIR = os.path.expanduser("~/.wine64/drive_c/Program Files/MetaTrader/MQL4/Experts")
+
+@app.post("/upload-ea")
+async def upload_ea(file: UploadFile = File(...)):
+    target_path = os.path.join(EA_DIR, file.filename)
+    with open(target_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"status": "uploaded", "path": target_path, "message": "EA saved ✅"}
+
+
+
+
+
