@@ -72,3 +72,21 @@ def stop_ea():
         return HTMLResponse(f"<p>⏹ {data}</p><a href='/'>⬅️ Back</a>")
     except Exception as e:
         return HTMLResponse(f"<p>❌ Error contacting runner: {e}</p><a href='/'>⬅️ Back</a>")
+
+
+# ========== LuvEA Runner Uploader ==========
+from fastapi import UploadFile, File
+import requests
+
+# URL del tuo runner Gitpod (verifica che sia quello corretto)
+RUNNER_URL = "https://5000-019a0278-f0c0-7b4a-a077-b50c65ea7c58.eu-central-1-01.gitpod.dev/upload-ea"
+
+@app.post("/api/upload-ea")
+async def upload_ea(file: UploadFile = File(...)):
+    try:
+        files = {"file": (file.filename, await file.read(), file.content_type)}
+        r = requests.post(RUNNER_URL, files=files)
+        return r.json()
+    except Exception as e:
+        return {"error": str(e)}
+
